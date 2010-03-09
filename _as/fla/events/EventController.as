@@ -1,4 +1,15 @@
-﻿
+﻿/**
+ * VERSION: 1.2
+ * DATE: 04/09/2009
+ * AS3 (AS2 version is also available)
+ * UPDATES AND DOCUMENTATION AT: http://fla.as/ec
+ * ...
+ * @author Ben Fhala with support by Core ASS team @Everything Nice inc.
+ * @site http://fla.as/ec
+ * @date 03/01/2009
+ * Copyright (c) 2009-2010 Everything Nice Inc.
+ * Licensed under the MIT license: http://www.opensource.org/licenses/mit-license.php 
+ **/ 
 
 package _as.fla.events{
 	import flash.utils.Dictionary;
@@ -168,6 +179,7 @@ package _as.fla.events{
 			delete getDict()[obj];
 		}
 		
+		
 		/**
 		 * this is not part of the public EC methods as it is encapsualted in the EC.rem.
 		 * if you wish to optimize your code and work directly with the EventController this method will remove cluster events. it will take only one param 
@@ -188,7 +200,7 @@ package _as.fla.events{
 				delete clusters[clusterID];
 			}
 		}
-		
+				
 		/**
 		 * EC.log will output all current events and all current objects that are tracked by the EventController sorted based on clusters. 
 		 * you can pass into the EC.log a cluster id. if a valid cluster id is passed the output will only output information related to the cluster tracked.
@@ -201,7 +213,10 @@ package _as.fla.events{
 			var temp:Object = {};
 			if(clustID is RegExp){
 				for(var item:String in clusters) if(item.match(clustID)!=null) temp[item] = clusters[item]; 
-			}else if(clusters[clustID])
+			}else if(clustID is EventDispatcher){
+				_oLog(clustID);
+				return;//breaking out to a diffrent log function
+			}if(clusters[clustID])
 				temp[clustID] = clusters[clustID];
 			else
 				temp = clusters;
@@ -278,16 +293,36 @@ package _as.fla.events{
 			var indent:String="\t";
 			for(var item:String in obj){
 				trace(item );
-				trace(indent + "\t\tobj\t\ttype\t\tlistener\t\tuseCapture"); 
-				for(var item2:String in obj[item]) trace(indent + obj[item][item2].obj +"\t"+
+				trace(indent + "\t\tobj\t\t\tname\t\t\ttype\t\tlistener\t\t\t\tuseCapture"); 
+				for(var item2:String in obj[item]) trace(indent + obj[item][item2].obj +"\t\t"+
+																  (obj[item][item2].obj.hasOwnProperty("name")?obj[item][item2].obj["name"]:"(NAME N/A)")+ "\t\t"+
 																  obj[item][item2].type+"\t\t"+
 																  obj[item][item2].listener +"\t\t"+
 																  obj[item][item2].useCapture ); 
 			}
 			trace("-----------------------\nAll objects that are tracked by the EventController:");
-			for(var dis:* in getDict()) trace("\t\t\t" + dis);
+			for(var dis:* in getDict()) trace("\t\t\t" +(dis.hasOwnProperty("name")?dis["name"]:"(NAME N/A)") + "   "+ dis);
 			trace("=======================\n=======================");
 	
+		}
+		
+		
+		private static function _oLog(_obj:Object):void{
+			var obj:EventDispatcher = _obj as EventDispatcher;
+			var indent:String="\t";
+			var objRef:Object = getObjRef(obj)[false];
+			trace("=======================\n--  "+(obj.hasOwnProperty("name")?obj["name"]:"(NAME N/A)") + "  " +obj+ "  -----------------------");
+			trace(indent + "\t\tobj\t\ttype\t\tlistener\t\t\t\tuseCapture"); 
+			trace("------------------------------------------------------------------");
+			for (var type:String in objRef)
+				for (var listener:* in objRef[type])
+					trace(indent + obj +"\t"+ type+"\t\t"+ listener +"\t\t"+ false ); 
+					
+			objRef = getObjRef(obj)[true];
+			for (type in objRef)
+				for (listener in objRef[type])
+					trace(indent + obj +"\t"+ type+"\t\t"+ listener +"\t\t"+ true ); 
+			trace("=======================");
 		}
 	}
 }
